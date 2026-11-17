@@ -476,6 +476,7 @@ async function concluir() {
   }
   prepararFim();
   mostrar("fim");
+  confetes();
 }
 
 /* ── tela final ──────────────────────────────────── */
@@ -492,6 +493,64 @@ function prepararFim() {
     $("#painel-teste").hidden = false;
     $("#dados-teste").textContent = JSON.stringify(registro, null, 2);
   }
+}
+
+// festa de confetes nas cores do deck: dois canhões dos cantos de baixo, na hora em que o visto risca o prato
+function confetes() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cv = document.createElement("canvas");
+  cv.className = "confetes";
+  cv.setAttribute("aria-hidden", "true");
+  document.body.append(cv);
+  const ctx = cv.getContext("2d");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const L = innerWidth, A = innerHeight;
+  cv.width = L * dpr;
+  cv.height = A * dpr;
+  ctx.scale(dpr, dpr);
+
+  const css = getComputedStyle(document.documentElement);
+  const cores = [css.getPropertyValue("--mag").trim(), css.getPropertyValue("--ind").trim(), "#209040", "#16166A"];
+  const acaso = (a, b) => a + Math.random() * (b - a);
+  const pedacos = [];
+  const disparar = (x, lado) => {
+    for (let i = 0; i < 70; i++) {
+      const ang = (-90 + lado * acaso(12, 38)) * Math.PI / 180;
+      const vel = acaso(A * 0.026, A * 0.036);
+      pedacos.push({
+        x, y: A + 10, vx: Math.cos(ang) * vel, vy: Math.sin(ang) * vel,
+        giro: acaso(0, Math.PI * 2), vg: acaso(-0.25, 0.25), virada: acaso(0, Math.PI * 2),
+        larg: acaso(6, 11), alt: acaso(3, 6), redondo: Math.random() < 0.25,
+        cor: cores[i % cores.length],
+      });
+    }
+  };
+  setTimeout(() => { disparar(0, 1); disparar(L, -1); }, 350);
+
+  const inicio = performance.now();
+  (function quadro(agora) {
+    ctx.clearRect(0, 0, L, A);
+    for (const p of pedacos) {
+      // sobe rápido e desce flutuando, com velocidade de queda limitada
+      p.vx *= 0.97;
+      p.vy = Math.min(p.vy * 0.985 + 0.25, 2.6);
+      p.x += p.vx + Math.sin(p.virada) * 0.6;
+      p.y += p.vy;
+      p.giro += p.vg;
+      p.virada += 0.12;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.giro);
+      ctx.scale(1, Math.cos(p.virada)); // o papel virando no ar
+      ctx.fillStyle = p.cor;
+      if (p.redondo) { ctx.beginPath(); ctx.arc(0, 0, p.alt, 0, Math.PI * 2); ctx.fill(); }
+      else ctx.fillRect(-p.larg / 2, -p.alt / 2, p.larg, p.alt);
+      ctx.restore();
+    }
+    const fim = agora - inicio > 1000 && pedacos.every((p) => p.y > A + 20);
+    if (fim || agora - inicio > 9000) cv.remove();
+    else requestAnimationFrame(quadro);
+  })(inicio);
 }
 
 /* ── agenda ──────────────────────────────────────── */
