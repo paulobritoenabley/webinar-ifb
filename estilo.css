@@ -363,6 +363,17 @@ h1 {
 .app-texto { flex: 1; min-width: 0; display: grid; gap: 2px; }
 .app-nome { font-size: 16px; font-weight: 600; }
 .app-sub { font-size: 13px; color: var(--t2); }
+.nota-app {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--mag-claro);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ind);
+}
+.nota-app[hidden] { display: none; }
+.nota-app a { color: var(--mag); font-weight: 600; text-underline-offset: 3px; }
 .folha .botao-linha { margin-top: 12px; border-color: var(--borda); color: var(--t2); }
 
 @media (min-width: 700px) {

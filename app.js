@@ -497,6 +497,8 @@ function prepararFim() {
 /* ── agenda ──────────────────────────────────────── */
 // O botão abre uma folha com os apps de agenda, na ordem mais provável do aparelho.
 // Todos levam o link do webinar no Teams: Google e Outlook por link pronto; Apple e os outros pelo agenda.ics.
+// No celular, Google (Android) e Outlook (Android e iPhone) tentam abrir o app já com o evento. Nada disso
+// é documentado pelo Google ou pela Microsoft, então a folha sempre oferece "Abrir no navegador" como saída.
 
 const ua = navigator.userAgent;
 const APARELHO = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
@@ -511,23 +513,48 @@ function linksAgenda() {
   const query = (p) => Object.entries(p).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
   const titulo = `Webinar: ${w.titulo}`;
   const detalhes = `Para entrar no webinar pelo Microsoft Teams, toque no link:\n${w.linkTeams}`;
+  const evGoogle = query({
+    action: "TEMPLATE", text: titulo, dates: `${utc(ini)}/${utc(fim)}`,
+    details: detalhes, location: w.linkTeams, ctz: "America/Sao_Paulo",
+  });
+  const evOutlookApp = query({ title: titulo, start: iso(ini), end: iso(fim), location: "Microsoft Teams", description: detalhes });
+  const google = `https://calendar.google.com/calendar/render?${evGoogle}`;
+  const outlook = `https://outlook.office.com/calendar/action/compose?${query({
+    rru: "addevent", subject: titulo, startdt: iso(ini), enddt: iso(fim),
+    body: detalhes, location: "Microsoft Teams",
+  })}`;
+  // Android: intent do Chrome com o pacote do app; sem o app instalado, o próprio Chrome abre o fallback
+  const intent = (caminho, esquema, pacote, fallback) =>
+    `intent://${caminho}#Intent;scheme=${esquema};package=${pacote};S.browser_fallback_url=${encodeURIComponent(fallback)};end`;
   return {
-    google: `https://calendar.google.com/calendar/render?${query({
-      action: "TEMPLATE", text: titulo, dates: `${utc(ini)}/${utc(fim)}`,
-      details: detalhes, location: w.linkTeams, ctz: "America/Sao_Paulo",
-    })}`,
-    outlook: `https://outlook.office.com/calendar/action/compose?${query({
-      rru: "addevent", subject: titulo, startdt: iso(ini), enddt: iso(fim),
-      body: detalhes, location: "Microsoft Teams",
-    })}`,
+    google,
+    outlook,
     ics: w.arquivoAgenda,
+    // o app Google Agenda atende os links antigos www.google.com/calendar/event
+    googleAndroid: intent(`www.google.com/calendar/event?${evGoogle}`, "https", "com.google.android.calendar", google),
+    outlookAndroid: intent(`events/new?${evOutlookApp}`, "ms-outlook", "com.microsoft.office.outlook", outlook),
+    outlookIos: `ms-outlook://events/new?${evOutlookApp}`,
   };
+}
+
+// qual link cada botão usa neste aparelho; "web" existe quando o botão tenta o app primeiro
+function linkDoApp(id, links) {
+  if (id === "google" && APARELHO === "android") return { href: links.googleAndroid, web: links.google };
+  if (id === "outlook" && APARELHO === "android") return { href: links.outlookAndroid, web: links.outlook };
+  if (id === "outlook" && APARELHO === "ios") return { href: links.outlookIos, web: links.outlook };
+  return { href: links[APPS[id].link] };
 }
 
 const APPS = {
   apple: { nome: "Agenda do iPhone", sub: "App Calendário da Apple", link: "ics" },
-  google: { nome: "Google Agenda", sub: "Abre com a sua conta Google", link: "google", novaAba: true, logo: "assets/logos/agenda-google.png" },
-  outlook: { nome: "Outlook", sub: "Conta da empresa (Microsoft 365)", link: "outlook", novaAba: true, logo: "assets/logos/agenda-outlook.webp" },
+  google: {
+    nome: "Google Agenda", sub: APARELHO === "android" ? "Abre no app Google Agenda" : "Abre com a sua conta Google",
+    link: "google", novaAba: true, logo: "assets/logos/agenda-google.png",
+  },
+  outlook: {
+    nome: "Outlook", sub: APARELHO === "computador" ? "Conta da empresa (Microsoft 365)" : "Abre no app Outlook",
+    link: "outlook", novaAba: true, logo: "assets/logos/agenda-outlook.webp",
+  },
   outro: { nome: "Outro app de agenda", sub: APARELHO === "computador" ? "Apple, Outlook do computador e outros (.ics)" : "Samsung e outros (arquivo .ics)", link: "ics" },
 };
 const ORDEM = {
@@ -542,10 +569,12 @@ function montarFolhaAgenda() {
   lista.replaceChildren();
   for (const id of ORDEM[APARELHO]) {
     const app = APPS[id];
+    const { href, web } = linkDoApp(id, links);
     const a = document.createElement("a");
     a.className = "app-agenda";
-    a.href = links[app.link];
-    if (app.novaAba) { a.target = "_blank"; a.rel = "noopener"; }
+    a.href = href;
+    // o link que chama o app fica na mesma aba: numa aba nova sobraria uma aba vazia
+    if (app.novaAba && !web) { a.target = "_blank"; a.rel = "noopener"; }
     const icone = app.logo
       ? `<img src="${app.logo}" alt="" width="30" height="30">`
       : `<svg viewBox="0 0 24 24" width="22" height="22"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -555,15 +584,32 @@ function montarFolhaAgenda() {
     $(".app-sub", a).textContent = app.sub;
     a.addEventListener("click", () => {
       registrarClique("escolheu-app", id);
+      if (web) return oferecerNavegador(app.nome, web);
       setTimeout(() => $("#folha-agenda").close(), 300);
     });
     lista.append(a);
   }
 }
 
+// a folha fica aberta com a saída pelo navegador; se o app abrir (a página sai da tela), ela fecha
+function oferecerNavegador(nome, web) {
+  $("#nome-app").textContent = nome;
+  $("#abrir-navegador").href = web;
+  $("#nota-app").hidden = false;
+  const aoSair = () => {
+    if (!document.hidden) return;
+    $("#folha-agenda").close();
+    document.removeEventListener("visibilitychange", aoSair);
+  };
+  document.addEventListener("visibilitychange", aoSair);
+}
+
+$("#abrir-navegador").addEventListener("click", () => setTimeout(() => $("#folha-agenda").close(), 300));
+
 $("#agenda").addEventListener("click", () => {
   montarFolhaAgenda();
   $("#nota-copia").hidden = true;
+  $("#nota-app").hidden = true;
   $("#folha-agenda").showModal();
   registrarClique("abriu-agenda");
 });
