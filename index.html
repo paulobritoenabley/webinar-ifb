@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F6F4FA">
+  <meta name="format-detection" content="telephone=no">
+  <title>Inscrição no webinar · IFB × Enabley</title>
+  <meta name="description" content="Inscreva-se no webinar de 27/11, às 10h: Como aumentar a eficiência do seu onboarding e o seu ROI.">
+  <link rel="preload" href="assets/fontes/Lexend-Medium.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <!-- degradês usados pelos desenhos; fora das telas para não sumirem quando uma tela é escondida -->
+  <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="gcabo" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#000033"/><stop offset="1" stop-color="#16166A"/></linearGradient>
+      <radialGradient id="gprato" cx=".5" cy=".42" r=".6"><stop offset=".65" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EFECF6"/></radialGradient>
+    </defs>
+  </svg>
+
+  <main class="app">
+
+    <header class="topo">
+      <div class="marcas">
+        <img class="logo-ifb" src="assets/logos/ifb-logo.png" alt="Instituto Foodservice Brasil">
+        <span class="vezes" aria-hidden="true">×</span>
+        <img class="logo-enabley" src="assets/logos/enabley-logo.png" alt="Enabley">
+      </div>
+      <div class="progresso" id="progresso" hidden>
+        <button class="voltar" id="voltar" type="button" aria-label="Voltar">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="trilho" aria-hidden="true"><div class="barra" id="barra"></div></div>
+        <span class="passo" id="passo">1 de 5</span>
+      </div>
+    </header>
+
+    <!-- 1 · boas-vindas -->
+    <section class="tela" id="tela-inicio">
+      <div class="prato" aria-hidden="true">
+        <!-- o garfo do IFB e a seta da Enabley cruzados sobre o prato, como na capa do deck -->
+        <svg viewBox="0 0 1200 1200">
+          <circle cx="600" cy="600" r="566" fill="#FFFFFF" stroke="#E3DFEE" stroke-width="6"/>
+          <circle cx="600" cy="600" r="440" fill="url(#gprato)" stroke="#ECE9F3" stroke-width="5"/>
+          <g class="garfo" transform="translate(600 600) rotate(-40) scale(.95)">
+            <path d="M-74 -150 L74 -150 L74 -60 C74 -10 40 20 26 40 L26 360 C26 378 14 390 0 390 C-14 390 -26 378 -26 360 L-26 40 C-40 20 -74 -10 -74 -60 Z" fill="url(#gcabo)"/>
+            <rect x="-74" y="-390" width="29" height="250" rx="14.5" fill="#209040"/>
+            <rect x="-34.3" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+            <rect x="5.3" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+            <rect x="45" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+          </g>
+          <g class="seta" transform="translate(600 600) rotate(40) scale(.95)">
+            <path d="M0 380 L0 -250" stroke="#FFFFFF" stroke-width="80" stroke-linecap="round"/>
+            <path d="M0 -420 L-92 -232 L92 -232 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="28" stroke-linejoin="round"/>
+            <path d="M0 380 L0 -250" stroke="#98008E" stroke-width="54" stroke-linecap="round"/>
+            <path d="M0 -420 L-92 -232 L92 -232 Z" fill="#98008E"/>
+          </g>
+        </svg>
+      </div>
+
+      <p class="etiqueta">Inscrição no webinar</p>
+      <h1 tabindex="-1">Vamos garantir o <span class="destaque">seu lugar</span>.</h1>
+      <p class="texto">São 5 perguntas rápidas, uma de cada vez. Leva menos de um minuto.</p>
+
+      <div class="evento">
+        <p class="evento-data">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span data-webinar="data"></span>
+        </p>
+        <p class="evento-titulo" data-webinar="titulo"></p>
+      </div>
+
+      <div class="rodape-acao">
+        <button class="botao" id="comecar" type="button">
+          Começar inscrição
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- 2 · as perguntas, uma por tela (montadas pelo app.js) -->
+    <div id="perguntas"></div>
+
+    <!-- 3 · enviando -->
+    <section class="tela" id="tela-enviando" hidden>
+      <div class="carregando" role="status">
+        <span class="roda" aria-hidden="true"></span>
+        <p>Confirmando sua inscrição…</p>
+      </div>
+    </section>
+
+    <!-- 4 · obrigado -->
+    <section class="tela" id="tela-fim" hidden>
+      <div class="talheres" aria-hidden="true">
+        <!-- o fecho do deck: o garfo e a seta viram talheres ao lado do prato -->
+        <svg viewBox="0 0 1400 1200">
+          <g transform="translate(150 600) scale(.78)">
+            <path d="M-74 -150 L74 -150 L74 -60 C74 -10 40 20 26 40 L26 360 C26 378 14 390 0 390 C-14 390 -26 378 -26 360 L-26 40 C-40 20 -74 -10 -74 -60 Z" fill="url(#gcabo)"/>
+            <rect x="-74" y="-390" width="29" height="250" rx="14.5" fill="#209040"/>
+            <rect x="-34.3" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+            <rect x="5.3" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+            <rect x="45" y="-390" width="29" height="250" rx="14.5" fill="url(#gcabo)"/>
+          </g>
+          <circle cx="700" cy="600" r="470" fill="#FFFFFF" stroke="#E3DFEE" stroke-width="6"/>
+          <circle cx="700" cy="600" r="360" fill="url(#gprato)" stroke="#ECE9F3" stroke-width="5"/>
+          <path class="visto" d="M545 612 L655 722 L862 492" fill="none" stroke="#98008E" stroke-width="74" stroke-linecap="round" stroke-linejoin="round"/>
+          <g transform="translate(1250 600) scale(.78)">
+            <path d="M0 380 L0 -250" stroke="#FFFFFF" stroke-width="80" stroke-linecap="round"/>
+            <path d="M0 -420 L-92 -232 L92 -232 Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="28" stroke-linejoin="round"/>
+            <path d="M0 380 L0 -250" stroke="#98008E" stroke-width="54" stroke-linecap="round"/>
+            <path d="M0 -420 L-92 -232 L92 -232 Z" fill="#98008E"/>
+          </g>
+        </svg>
+      </div>
+
+      <p class="etiqueta">Inscrição confirmada</p>
+      <h1 id="fim-titulo" tabindex="-1">Tudo certo!</h1>
+
+      <div class="evento">
+        <p class="evento-data">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span data-webinar="data"></span>
+        </p>
+        <p class="evento-titulo" data-webinar="titulo"></p>
+        <button class="botao-linha" id="agenda" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v5M9.5 15.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Adicionar à agenda
+        </button>
+      </div>
+
+      <details class="teste" id="painel-teste" hidden>
+        <summary>Modo de teste: ver os dados que seriam enviados</summary>
+        <p>Sem backend: nenhum e-mail foi enviado de verdade. Os dados ficam só neste navegador.</p>
+        <pre id="dados-teste"></pre>
+        <button class="botao-linha" id="reiniciar" type="button">Fazer outra inscrição</button>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- escolha do app de agenda (o app.js preenche as opções na ordem do aparelho) -->
+  <dialog class="folha" id="folha-agenda" aria-labelledby="folha-titulo">
+    <div class="folha-corpo">
+      <span class="folha-alca" aria-hidden="true"></span>
+      <p class="folha-titulo" id="folha-titulo">Adicionar à agenda</p>
+      <p class="folha-texto">Escolha o seu app. O link do webinar no Teams já vai junto no evento.</p>
+      <div class="folha-opcoes" id="opcoes-agenda"></div>
+      <button class="link" id="copiar-teams" type="button">Copiar só o link do webinar</button>
+      <p class="nota" id="nota-copia" hidden aria-live="polite"></p>
+      <button class="botao-linha" id="fechar-agenda" type="button">Cancelar</button>
+    </div>
+  </dialog>
+
+  <script src="planilha.js"></script>
+  <script src="evento.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

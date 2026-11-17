@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#F6F4FA">
+  <meta name="format-detection" content="telephone=no">
+  <title>Painel de inscrições · IFB × Enabley</title>
+  <link rel="stylesheet" href="../estilo.css">
+  <link rel="stylesheet" href="painel.css">
+</head>
+<body>
+  <main class="painel">
+
+    <header class="cabeca">
+      <div class="marcas">
+        <img class="logo-ifb" src="../assets/logos/ifb-logo.png" alt="Instituto Foodservice Brasil">
+        <span class="vezes" aria-hidden="true">×</span>
+        <img class="logo-enabley" src="../assets/logos/enabley-logo.png" alt="Enabley">
+      </div>
+      <div class="cabeca-acoes">
+        <span class="atualizado" id="atualizado" aria-live="polite"></span>
+        <button class="botao-linha pequeno" id="atualizar" type="button">Atualizar</button>
+        <button class="link sair" id="sair" type="button" hidden>Sair</button>
+      </div>
+    </header>
+
+    <div class="titulo">
+      <p class="etiqueta">Painel de controle</p>
+      <h1>Inscrições do webinar</h1>
+      <p class="sub"><span data-webinar="data"></span> · <span data-webinar="titulo"></span></p>
+    </div>
+
+    <p class="aviso-teste" id="aviso-teste" hidden>
+      <strong>Modo de teste.</strong> A planilha ainda não está ligada (planilha.js vazio).
+      Aqui aparecem só as inscrições feitas neste navegador.
+    </p>
+
+    <form class="entrar" id="entrar" hidden>
+      <label class="entrar-titulo" for="senha">Senha do painel</label>
+      <p class="entrar-texto">A mesma que está em SENHA_PAINEL, no Apps Script da planilha.</p>
+      <div class="campo">
+        <input id="senha" type="password" autocomplete="current-password" required>
+      </div>
+      <p class="erro" id="erro-senha" role="alert"></p>
+      <button class="botao" type="submit">Entrar</button>
+    </form>
+
+    <section id="conteudo" hidden>
+      <div class="numeros" id="numeros"></div>
+
+      <div class="bloco">
+        <h2>Apps de agenda escolhidos</h2>
+        <p class="bloco-texto">Pessoas que tocaram em cada app. Uma pessoa pode escolher mais de um.</p>
+        <div class="apps" id="apps"></div>
+      </div>
+
+      <div class="bloco">
+        <div class="lista-topo">
+          <h2>Inscritos <span class="contagem" id="contagem"></span></h2>
+          <div class="lista-acoes">
+            <input class="busca" id="busca" type="search" placeholder="Buscar nome, empresa, e-mail…" aria-label="Buscar inscrito">
+            <button class="botao-linha pequeno" id="baixar" type="button">Baixar planilha (.csv)</button>
+          </div>
+        </div>
+        <div class="linha cabecalho" aria-hidden="true">
+          <span>Pessoa</span><span>Contato</span><span>Agenda</span><span>Inscrição</span>
+        </div>
+        <div id="linhas"></div>
+        <p class="vazio" id="vazio" hidden></p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="../planilha.js"></script>
+  <script src="../evento.js"></script>
+  <script src="painel.js"></script>
+</body>
+</html>

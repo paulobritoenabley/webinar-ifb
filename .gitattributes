@@ -1,0 +1,2 @@
+# o agenda.ics precisa das quebras de linha CRLF do padrão de calendário; o git não mexe nelas
+*.ics -text
