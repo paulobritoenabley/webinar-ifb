@@ -18,6 +18,11 @@ A pessoa se inscreve no webinar de **sexta, 27/11, às 10h**: "Como aumentar a e
 A inscrição e cada clique da agenda (abriu "Adicionar à agenda", escolheu Google, Outlook, Agenda do iPhone
 ou outro app, copiou o link) vão para uma planilha do Google. O **painel** (`/painel/`) lê essa planilha.
 
+**Quem para no meio também fica guardado.** A cada pergunta respondida, a página salva até onde a pessoa
+chegou na aba "Não concluíram" (uma linha por pessoa, atualizada a cada etapa). Se ela fechar a aba com a
+resposta já digitada e válida, mas sem tocar em Continuar, essa resposta também vai. Quando a mesma pessoa
+conclui, a linha dela sai dessa aba. A tela de boas-vindas avisa que as respostas ficam salvas a cada etapa.
+
 ## Painel de controle (`painel/`)
 
 Abra `seu-site/painel/`. Pede a senha uma vez por aparelho (botão "Sair" esquece).
@@ -26,6 +31,8 @@ Abra `seu-site/painel/`. Pede a senha uma vez por aparelho (botão "Sair" esquec
 - Apps de agenda escolhidos, com a quantidade de pessoas em cada um.
 - Lista de inscritos, a mais nova em cima: nome, cargo, empresa, e-mail, WhatsApp (abre a conversa),
   o que a pessoa fez na agenda e a hora da inscrição. Tem busca e "Baixar planilha (.csv)" para o Excel.
+- Não concluíram: quem começou e parou, com os dados até onde chegou e a etapa em que parou.
+  Também baixa em .csv.
 - Atualiza sozinho a cada minuto.
 
 Os dados não ficam no GitHub: ficam só na planilha. O painel é público como endereço, mas sem a senha
@@ -43,9 +50,11 @@ não mostra nada. Ele não aparece no Google (noindex).
    Avançado > Acessar). Copie o endereço que termina em `/exec`.
 5. Cole esse endereço no `planilha.js`, em `url: "..."`.
 
-As abas "Inscrições" e "Cliques" aparecem sozinhas na primeira inscrição.
-Mudou o código do `planilha-google.gs`? Em **Implantar > Gerenciar implantações**, edite a que existe e
-escolha "Nova versão": assim o endereço `/exec` continua o mesmo.
+As abas "Inscrições", "Não concluíram" e "Cliques" aparecem sozinhas no primeiro uso.
+
+**Mudou o código do `planilha-google.gs`?** Cole o código novo no Apps Script (apague o antigo) e salve.
+Depois **Implantar > Gerenciar implantações**, clique no lápis, em **Versão** escolha **Nova versão** e
+clique em **Implantar**. Assim o endereço `/exec` continua o mesmo e não precisa mexer no `planilha.js`.
 
 ## Publicar no GitHub Pages
 

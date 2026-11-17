@@ -19,6 +19,7 @@ const CONFIG = {
 // o painel lê estas mesmas chaves no modo de teste
 const CHAVE_LOCAL = "inscricoes-webinar-ifb";
 const CHAVE_CLIQUES = "inscricoes-webinar-ifb-cliques";
+const CHAVE_PARCIAIS = "inscricoes-webinar-ifb-parciais";
 
 /* ── regras de cada campo ─────────────────────────── */
 
@@ -180,6 +181,8 @@ const PERGUNTAS = [
 
 const dados = {};
 const tentou = {};
+// o mesmo id liga as respostas parciais à inscrição completa
+const sessao = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 let registro = null;
 let suspeito = false;
 let inicioEm = 0;
@@ -349,9 +352,38 @@ function responder(p, i) {
   dados[p.id] = p.normalizar(input.value);
   input.value = dados[p.id];
 
-  if (i < PERGUNTAS.length - 1) return mostrar(PERGUNTAS[i + 1].id);
+  if (i < PERGUNTAS.length - 1) {
+    salvarParcial(PERGUNTAS[i + 1].id);
+    return mostrar(PERGUNTAS[i + 1].id);
+  }
   concluir();
 }
+
+/* ── respostas parciais ──────────────────────────── */
+// A cada etapa vencida, guarda até onde a pessoa chegou. Se ela não concluir, o painel mostra
+// os dados para o time tentar contato. A inscrição completa apaga a parcial (mesmo id).
+
+let ultimaParcial = "";
+
+function salvarParcial(parouEm) {
+  if (registro) return;
+  const corpo = { id: sessao, parouEm, ...lerOrigem() };
+  for (const p of PERGUNTAS) corpo[p.id] = dados[p.id] || "";
+  const assinatura = JSON.stringify(corpo);
+  if (assinatura === ultimaParcial) return;
+  ultimaParcial = assinatura;
+  enviar("parcial", corpo).catch(console.error);
+}
+
+// fechou a aba ou trocou de app no meio de uma pergunta: guarda também o que já está válido no campo
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "hidden" || registro) return;
+  const p = PERGUNTAS.find((q) => !$(`#tela-${q.id}`).hidden);
+  if (!p) return;
+  const input = $(`#tela-${p.id} input`);
+  if (!p.validar(input.value)) dados[p.id] = p.normalizar(input.value);
+  if (dados.nome) salvarParcial(p.id);
+});
 
 $("#voltar").addEventListener("click", () => {
   const atual = [...telas()].find((t) => !t.hidden);
@@ -373,7 +405,7 @@ async function enviar(tipo, corpo) {
   const pacote = { tipo, ...corpo, em: new Date().toISOString() };
   if (CONFIG.endpoint) {
     // vai como texto simples, sem cabeçalho: o Apps Script não responde à consulta prévia que o JSON puxaria.
-    // keepalive deixa o clique chegar mesmo se a pessoa sair da página logo depois
+    // keepalive deixa o clique (e a parcial de quem fecha a aba) chegar mesmo se a pessoa sair da página logo depois
     const r = await fetch(CONFIG.endpoint, { method: "POST", body: JSON.stringify(pacote), keepalive: tipo !== "inscricao" });
     if (!r.ok) throw new Error(`Falha no envio (${r.status})`);
     const resposta = await r.json().catch(() => ({}));
@@ -383,12 +415,15 @@ async function enviar(tipo, corpo) {
   await espera(tipo === "inscricao" ? 1100 : 0);
   console.info("[teste] seria enviado:", pacote);
   if (tipo === "clique") guardarLocal(CHAVE_CLIQUES, pacote);
+  if (tipo === "parcial") guardarLocal(CHAVE_PARCIAIS, pacote, true);
 }
 
-function guardarLocal(chave, item) {
+// porId: troca o item de mesmo id em vez de juntar outro (a parcial é uma linha por pessoa)
+function guardarLocal(chave, item, porId = false) {
   try {
     const lista = JSON.parse(localStorage.getItem(chave) || "[]");
-    lista.push(item);
+    const i = porId ? lista.findIndex((x) => x.id === item.id) : -1;
+    if (i >= 0) lista[i] = item; else lista.push(item);
     localStorage.setItem(chave, JSON.stringify(lista));
   } catch (_) { /* navegador sem armazenamento: segue sem guardar */ }
 }
@@ -410,7 +445,7 @@ async function concluir() {
   suspeito = $('input[name="nao_preencher"]').value !== "" || Date.now() - inicioEm < 2500;
   const d = dados.whatsapp.replace(/\D/g, "");
   registro = {
-    id: (crypto.randomUUID && crypto.randomUUID()) || String(Date.now()),
+    id: sessao,
     nome: dados.nome,
     cargo: dados.cargo,
     empresa: dados.empresa,

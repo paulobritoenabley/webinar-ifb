@@ -1,7 +1,7 @@
 "use strict";
 
 /* Painel de inscrições · IFB × Enabley
- * Lê as abas "Inscrições" e "Cliques" da planilha (endereço no planilha.js) com a senha do painel.
+ * Lê as abas "Inscrições", "Não concluíram" e "Cliques" da planilha (endereço no planilha.js) com a senha do painel.
  * Sem endereço, mostra os dados de teste deste navegador (as mesmas chaves que o app.js grava).
  */
 
@@ -16,12 +16,14 @@ const APPS = [
   { id: "outro", nome: "Outro app" },
 ];
 const NOME_APP = Object.fromEntries(APPS.map((a) => [a.id, a.nome]));
+const NOME_ETAPA = { nome: "Nome", cargo: "Cargo", empresa: "Empresa", email: "E-mail", whatsapp: "WhatsApp" };
 const ICONE_AGENDA = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
 const $ = (sel, raiz = document) => raiz.querySelector(sel);
 
 let senha = lerGuardado(CHAVE_SENHA) || "";
 let pessoas = [];
+let parciais = [];
 let atualizando = false;
 
 /* ── guardar no navegador ───────────────────────────── */
@@ -38,7 +40,11 @@ function guardar(chave, valor) {
 async function buscar() {
   if (TESTE) {
     const lista = (chave) => { try { return JSON.parse(lerGuardado(chave) || "[]"); } catch (_) { return []; } };
-    return { inscricoes: lista("inscricoes-webinar-ifb"), cliques: lista("inscricoes-webinar-ifb-cliques") };
+    return {
+      inscricoes: lista("inscricoes-webinar-ifb"),
+      parciais: lista("inscricoes-webinar-ifb-parciais"),
+      cliques: lista("inscricoes-webinar-ifb-cliques"),
+    };
   }
   // texto simples, igual ao app.js: o Apps Script não aceita a consulta prévia do JSON
   const r = await fetch(PLANILHA.url, { method: "POST", body: JSON.stringify({ tipo: "painel", senha }) });
@@ -75,7 +81,13 @@ async function atualizar() {
   botao.disabled = true;
   botao.textContent = "Atualizando…";
   try {
-    pessoas = juntar(await buscar());
+    const d = await buscar();
+    pessoas = juntar(d);
+    // quem concluiu depois sai da lista, mesmo que a parcial ainda esteja lá
+    const concluiram = new Set(pessoas.map((p) => p.id));
+    parciais = (d.parciais || [])
+      .filter((p) => !concluiram.has(p.id))
+      .sort((a, b) => String(b.em).localeCompare(String(a.em)));
     desenhar();
     $("#entrar").hidden = true;
     $("#conteudo").hidden = false;
@@ -150,6 +162,7 @@ function desenhar() {
   }
 
   desenharLista();
+  desenharParciais();
 }
 
 function hojeTexto() {
@@ -180,30 +193,13 @@ function desenharLista() {
   linhas.replaceChildren();
   for (const p of lista) {
     const linha = criar("div", "linha");
-
-    const pessoa = criar("div");
-    pessoa.append(criar("div", "pessoa-nome", p.nome), criar("div", "pessoa-cargo", [p.cargo, p.empresa].filter(Boolean).join(" · ")));
-
-    const contato = criar("div", "contato");
-    const email = criar("a", "", p.email);
-    email.href = `mailto:${p.email}`;
-    contato.append(email);
-    const numero = String(p.whatsappInternacional || "").replace(/\D/g, "");
-    if (numero) {
-      const whats = criar("a", "whats", `WhatsApp ${p.whatsapp}`);
-      whats.href = `https://wa.me/${numero}`;
-      whats.target = "_blank";
-      whats.rel = "noopener";
-      contato.append(whats);
-    }
-
     const selos = criar("div", "selos");
     for (const app of p.apps) selos.append(criar("span", "selo", NOME_APP[app] || app));
     if (p.copiouLink) selos.append(criar("span", "selo neutro", "Copiou o link"));
     if (p.abriuAgenda && !p.apps.length && !p.copiouLink) selos.append(criar("span", "selo neutro", "Abriu, não escolheu"));
     if (!p.abriuAgenda && !p.apps.length && !p.copiouLink) selos.append(criar("span", "selo apagado", "Não abriu a agenda"));
 
-    linha.append(pessoa, contato, selos, criar("div", "quando", quando(p.inscritoEm)));
+    linha.append(celulaPessoa(p), celulaContato(p), selos, criar("div", "quando", quando(p.inscritoEm)));
     linhas.append(linha);
   }
 
@@ -212,24 +208,78 @@ function desenharLista() {
   vazio.textContent = pessoas.length ? "Ninguém com esse nome, empresa ou e-mail." : "Ninguém se inscreveu ainda.";
 }
 
+function desenharParciais() {
+  $("#contagem-parciais").textContent = `(${parciais.length})`;
+  const linhas = $("#linhas-parciais");
+  linhas.replaceChildren();
+  for (const p of parciais) {
+    const linha = criar("div", "linha");
+    const selos = criar("div", "selos");
+    selos.append(criar("span", "selo parou", `Parou em: ${NOME_ETAPA[p.parouEm] || p.parouEm}`));
+    linha.append(celulaPessoa(p), celulaContato(p), selos, criar("div", "quando", quando(p.em)));
+    linhas.append(linha);
+  }
+  $("#vazio-parciais").hidden = parciais.length > 0;
+}
+
+function celulaPessoa(p) {
+  const pessoa = criar("div");
+  pessoa.append(criar("div", "pessoa-nome", p.nome), criar("div", "pessoa-cargo", [p.cargo, p.empresa].filter(Boolean).join(" · ")));
+  return pessoa;
+}
+
+function celulaContato(p) {
+  const contato = criar("div", "contato");
+  if (p.email) {
+    const email = criar("a", "", p.email);
+    email.href = `mailto:${p.email}`;
+    contato.append(email);
+  }
+  // a parcial só tem o número com DDD; a inscrição completa já traz o +55
+  const numero = String(p.whatsappInternacional || (p.whatsapp ? `55${p.whatsapp}` : "")).replace(/\D/g, "");
+  if (numero) {
+    const whats = criar("a", "whats", `WhatsApp ${p.whatsapp}`);
+    whats.href = `https://wa.me/${numero}`;
+    whats.target = "_blank";
+    whats.rel = "noopener";
+    contato.append(whats);
+  }
+  if (!contato.childElementCount) contato.append(criar("span", "sem-contato", "Ainda sem e-mail ou WhatsApp"));
+  return contato;
+}
+
 /* ── baixar planilha ────────────────────────────────── */
 
-function baixarCsv() {
+function baixarInscritos() {
+  baixarCsv(
+    "inscricoes-webinar-ifb",
+    ["Inscrito em", "Nome", "Cargo", "Empresa", "E-mail", "WhatsApp", "Origem", "Abriu a agenda", "App escolhido", "Copiou o link"],
+    filtradas().map((p) => [
+      quando(p.inscritoEm), p.nome, p.cargo, p.empresa, p.email, p.whatsapp, p.origem,
+      p.abriuAgenda ? "sim" : "não", p.apps.map((a) => NOME_APP[a] || a).join(", "), p.copiouLink ? "sim" : "não",
+    ]),
+  );
+}
+
+function baixarParciais() {
+  baixarCsv(
+    "nao-concluiram-webinar-ifb",
+    ["Última resposta", "Nome", "Cargo", "Empresa", "E-mail", "WhatsApp", "Parou em", "Origem"],
+    parciais.map((p) => [quando(p.em), p.nome, p.cargo, p.empresa, p.email, p.whatsapp, NOME_ETAPA[p.parouEm] || p.parouEm, p.origem]),
+  );
+}
+
+function baixarCsv(nome, cabecalho, linhas) {
   // ponto e vírgula e BOM: o Excel em português abre com as colunas e os acentos certos
   const celula = (v) => {
     let t = String(v == null ? "" : v);
     if (/^[=+\-@]/.test(t)) t = `'${t}`;
     return `"${t.replace(/"/g, '""')}"`;
   };
-  const cabecalho = ["Inscrito em", "Nome", "Cargo", "Empresa", "E-mail", "WhatsApp", "Origem", "Abriu a agenda", "App escolhido", "Copiou o link"];
-  const linhas = filtradas().map((p) => [
-    quando(p.inscritoEm), p.nome, p.cargo, p.empresa, p.email, p.whatsapp, p.origem,
-    p.abriuAgenda ? "sim" : "não", p.apps.map((a) => NOME_APP[a] || a).join(", "), p.copiouLink ? "sim" : "não",
-  ]);
   const csv = "﻿" + [cabecalho, ...linhas].map((l) => l.map(celula).join(";")).join("\r\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `inscricoes-webinar-ifb-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `${nome}-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.append(a);
   a.click();
   a.remove();
@@ -271,7 +321,8 @@ for (const el of document.querySelectorAll('[data-webinar="titulo"]')) el.textCo
 
 $("#atualizar").addEventListener("click", () => (TESTE || senha ? atualizar() : pedirSenha()));
 $("#busca").addEventListener("input", desenharLista);
-$("#baixar").addEventListener("click", baixarCsv);
+$("#baixar").addEventListener("click", baixarInscritos);
+$("#baixar-parciais").addEventListener("click", baixarParciais);
 
 if (TESTE) {
   $("#aviso-teste").hidden = false;

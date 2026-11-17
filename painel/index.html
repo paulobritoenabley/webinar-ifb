@@ -70,6 +70,23 @@
         <div id="linhas"></div>
         <p class="vazio" id="vazio" hidden></p>
       </div>
+
+      <div class="bloco">
+        <div class="lista-topo">
+          <div>
+            <h2>Não concluíram <span class="contagem" id="contagem-parciais"></span></h2>
+            <p class="bloco-texto sem-margem">Começaram e pararam no meio. Ficam aqui os dados até a etapa em que pararam.</p>
+          </div>
+          <div class="lista-acoes">
+            <button class="botao-linha pequeno" id="baixar-parciais" type="button">Baixar planilha (.csv)</button>
+          </div>
+        </div>
+        <div class="linha cabecalho" aria-hidden="true">
+          <span>Pessoa</span><span>Contato</span><span>Parou em</span><span>Última resposta</span>
+        </div>
+        <div id="linhas-parciais"></div>
+        <p class="vazio" id="vazio-parciais" hidden>Ninguém parou no meio até agora.</p>
+      </div>
     </section>
 
   </main>

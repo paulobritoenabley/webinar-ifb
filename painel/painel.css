@@ -84,9 +84,12 @@
 
 .lista-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .contagem { color: var(--t3); font-weight: 500; }
+.bloco-texto.sem-margem { margin-bottom: 0; }
+.selo.parou { background: var(--erro-claro); color: var(--erro); }
+.sem-contato { color: var(--t3); }
 .lista-acoes { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
 .busca {
-  flex: 1;
+  flex: 1 1 200px;
   min-width: 0;
   max-width: 320px;
   height: 40px;

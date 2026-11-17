@@ -7,14 +7,19 @@
  *
  * Recebe da página:
  *   inscricao  → uma linha na aba "Inscrições"
+ *   parcial    → a aba "Não concluíram": uma linha por pessoa, atualizada a cada etapa que ela vence;
+ *                some quando a mesma pessoa conclui a inscrição
  *   clique     → uma linha na aba "Cliques" (abriu-agenda, escolheu-app, copiou-link)
- *   painel     → devolve as duas abas, só com a senha certa
+ *   painel     → devolve as três abas, só com a senha certa
  */
 
 const ABA_INSCRICOES = "Inscrições";
+const ABA_PARCIAIS = "Não concluíram";
 const ABA_CLIQUES = "Cliques";
 const COLUNAS_INSCRICAO = ["inscritoEm", "nome", "cargo", "empresa", "email", "whatsapp", "whatsappInternacional", "origem", "utm", "webinar", "id"];
+const COLUNAS_PARCIAL = ["em", "nome", "cargo", "empresa", "email", "whatsapp", "parouEm", "origem", "utm", "id"];
 const COLUNAS_CLIQUE = ["em", "id", "acao", "app"];
+const ETAPAS = ["nome", "cargo", "empresa", "email", "whatsapp"];
 const ACOES = ["abriu-agenda", "escolheu-app", "copiou-link"];
 const APPS = ["", "apple", "google", "outlook", "outro"];
 
@@ -25,7 +30,7 @@ function doPost(e) {
   if (d.tipo === "painel") {
     const senha = PropertiesService.getScriptProperties().getProperty("SENHA_PAINEL");
     if (!senha || d.senha !== senha) return responder({ ok: false, erro: "senha" });
-    return responder({ ok: true, inscricoes: ler(ABA_INSCRICOES), cliques: ler(ABA_CLIQUES) });
+    return responder({ ok: true, inscricoes: ler(ABA_INSCRICOES), parciais: ler(ABA_PARCIAIS), cliques: ler(ABA_CLIQUES) });
   }
 
   // uma escrita por vez, para duas inscrições ao mesmo tempo não caírem na mesma linha
@@ -36,6 +41,17 @@ function doPost(e) {
       if (!d.id || !d.nome || !d.email) return responder({ ok: false, erro: "campos" });
       d.utm = Object.keys(d.utm || {}).length ? JSON.stringify(d.utm) : "";
       anotar(ABA_INSCRICOES, COLUNAS_INSCRICAO, d);
+      const linha = acharLinha(ABA_PARCIAIS, COLUNAS_PARCIAL, d.id);
+      if (linha) aba(ABA_PARCIAIS, COLUNAS_PARCIAL).deleteRow(linha);
+    } else if (d.tipo === "parcial" && d.id && d.nome && ETAPAS.includes(d.parouEm)) {
+      // quem já concluiu não volta para a lista (uma parcial atrasada pode chegar depois da inscrição)
+      if (acharLinha(ABA_INSCRICOES, COLUNAS_INSCRICAO, d.id)) return responder({ ok: true });
+      d.utm = Object.keys(d.utm || {}).length ? JSON.stringify(d.utm) : "";
+      const valores = COLUNAS_PARCIAL.map((c) => limpar(d[c]));
+      const a = aba(ABA_PARCIAIS, COLUNAS_PARCIAL);
+      const linha = acharLinha(ABA_PARCIAIS, COLUNAS_PARCIAL, d.id);
+      if (linha) a.getRange(linha, 1, 1, valores.length).setValues([valores]);
+      else a.appendRow(valores);
     } else if (d.tipo === "clique" && d.id && ACOES.includes(d.acao) && APPS.includes(d.app || "")) {
       anotar(ABA_CLIQUES, COLUNAS_CLIQUE, d);
     } else {
@@ -67,6 +83,15 @@ function aba(nome, colunas) {
     a.getRange(1, 1, 1, colunas.length).setFontWeight("bold");
   }
   return a;
+}
+
+// número da linha com esse id (o id é sempre a última coluna das abas de pessoas), ou 0
+function acharLinha(nomeAba, colunas, id) {
+  const a = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nomeAba);
+  if (!a || a.getLastRow() < 2) return 0;
+  const coluna = colunas.indexOf("id") + 1;
+  const achado = a.getRange(2, coluna, a.getLastRow() - 1, 1).createTextFinder(String(id)).matchEntireCell(true).findNext();
+  return achado ? achado.getRow() : 0;
 }
 
 function ler(nome) {
