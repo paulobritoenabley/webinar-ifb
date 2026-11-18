@@ -7,6 +7,6 @@ const EVENTO = {
   inicio: "2026-11-27T10:00:00-03:00",
   duracaoMin: 60,
   // link de entrada da sala no Microsoft Teams (o "Entrar na reunião" do convite do Teams)
-  linkTeams: "https://teams.microsoft.com/meet/3293755500545046?p=jPZEbYRBy0cYRv19BB",
+  linkTeams: "https://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq",
   arquivoAgenda: "agenda.ics",
 };

@@ -5,17 +5,17 @@ CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
 UID:webinar-20261127T130000Z@enabley.io
-DTSTAMP:20261117T194502Z
+DTSTAMP:20261118T122041Z
 DTSTART:20261127T130000Z
 DTEND:20261127T140000Z
 SUMMARY:Webinar: Como aumentar a eficiência do seu onboarding e o seu ROI
-LOCATION:Microsoft Teams: https://teams.microsoft.com/meet/3293755500545046
- ?p=jPZEbYRBy0cYRv19BB
-URL:https://teams.microsoft.com/meet/3293755500545046?p=jPZEbYRBy0cYRv19BB
+LOCATION:Microsoft Teams: https://teams.microsoft.com/meet/3432261999992135
+ ?p=HTwgj74uhz8xvmEBtq
+URL:https://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq
 DESCRIPTION:Para entrar no webinar pelo Microsoft Teams\, toque no link:\nh
- ttps://teams.microsoft.com/meet/3293755500545046?p=jPZEbYRBy0cYRv19BB
-X-MICROSOFT-SKYPETEAMSMEETINGURL:https://teams.microsoft.com/meet/329375550
- 0545046?p=jPZEbYRBy0cYRv19BB
+ ttps://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq
+X-MICROSOFT-SKYPETEAMSMEETINGURL:https://teams.microsoft.com/meet/343226199
+ 9992135?p=HTwgj74uhz8xvmEBtq
 BEGIN:VALARM
 TRIGGER:-PT15M
 ACTION:DISPLAY
