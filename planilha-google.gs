@@ -4,9 +4,11 @@
  * Senha do painel: Configurações do projeto (engrenagem) > Propriedades do script > SENHA_PAINEL.
  * Publicar: Implantar > Nova implantação > App da Web, executar como "Eu", acesso "Qualquer pessoa".
  * O endereço que terminar em /exec vai no planilha.js da página.
+ * Antes da primeira publicação com convite: escolha "prepararAgenda" ao lado de Depuração, clique em Executar
+ * e autorize o acesso à agenda. Isso cria a agenda "Webinar IFB × Enabley", de onde saem os convites.
  *
  * Recebe da página:
- *   inscricao  → uma linha na aba "Inscrições"
+ *   inscricao  → uma linha na aba "Inscrições" e um convite de agenda para o e-mail, com o link do Teams
  *   parcial    → a aba "Não concluíram": uma linha por pessoa, atualizada a cada etapa que ela vence;
  *                some quando a mesma pessoa conclui a inscrição
  *   clique     → uma linha na aba "Cliques" (abriu-agenda, escolheu-app, copiou-link)
@@ -23,6 +25,16 @@ const ETAPAS = ["nome", "cargo", "empresa", "email", "whatsapp"];
 const ACOES = ["abriu-agenda", "escolheu-app", "copiou-link"];
 const APPS = ["", "apple", "google", "outlook", "outro"];
 
+// o convite usa só estes dados fixos (nada vem da página), para ninguém mandar outro texto em nome da Enabley.
+// Mudou o link ou o horário? Troque aqui e no evento.js da página.
+const EVENTO = {
+  titulo: "Webinar: Como aumentar a eficiência do seu onboarding e o seu ROI",
+  inicio: "2026-11-27T10:00:00-03:00",
+  duracaoMin: 60,
+  linkTeams: "https://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq",
+};
+const NOME_AGENDA = "Webinar IFB × Enabley";
+
 function doPost(e) {
   let d;
   try { d = JSON.parse(e.postData.contents); } catch (_) { return responder({ ok: false, erro: "formato" }); }
@@ -36,9 +48,12 @@ function doPost(e) {
   // uma escrita por vez, para duas inscrições ao mesmo tempo não caírem na mesma linha
   const trava = LockService.getScriptLock();
   trava.waitLock(10000);
+  let convidar = "";
   try {
     if (d.tipo === "inscricao") {
       if (!d.id || !d.nome || !d.email) return responder({ ok: false, erro: "campos" });
+      // um convite por e-mail: quem se inscreve de novo não recebe outro
+      if (!acharLinha(ABA_INSCRICOES, COLUNAS_INSCRICAO, d.email, "email")) convidar = d.email;
       d.utm = Object.keys(d.utm || {}).length ? JSON.stringify(d.utm) : "";
       anotar(ABA_INSCRICOES, COLUNAS_INSCRICAO, d);
       const linha = acharLinha(ABA_PARCIAIS, COLUNAS_PARCIAL, d.id);
@@ -60,7 +75,39 @@ function doPost(e) {
   } finally {
     trava.releaseLock();
   }
+  // fora da trava; se o convite falhar, a inscrição já está salva e a página segue normalmente
+  if (convidar) {
+    try { mandarConvite(convidar); } catch (erro) { console.error("convite não enviado", convidar, erro); }
+  }
   return responder({ ok: true });
+}
+
+// um evento por pessoa, na agenda própria do webinar: cada um recebe o seu convite e ninguém vê os outros inscritos
+function mandarConvite(email) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+  const inicio = new Date(EVENTO.inicio);
+  const fim = new Date(inicio.getTime() + EVENTO.duracaoMin * 60000);
+  agendaDoWebinar().createEvent(EVENTO.titulo, inicio, fim, {
+    description: `Para entrar no webinar pelo Microsoft Teams, clique no link:\n${EVENTO.linkTeams}`,
+    location: EVENTO.linkTeams,
+    guests: email,
+    sendInvites: true,
+  });
+}
+
+function agendaDoWebinar() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty("AGENDA_ID");
+  const existente = id && CalendarApp.getCalendarById(id);
+  if (existente) return existente;
+  const nova = CalendarApp.createCalendar(NOME_AGENDA, { timeZone: "America/Sao_Paulo" });
+  props.setProperty("AGENDA_ID", nova.getId());
+  return nova;
+}
+
+// rodar uma vez pelo editor: pede a autorização da agenda e cria a agenda do webinar
+function prepararAgenda() {
+  console.log("Agenda pronta:", agendaDoWebinar().getName());
 }
 
 // abrir o endereço no navegador só confirma que está no ar
@@ -85,12 +132,12 @@ function aba(nome, colunas) {
   return a;
 }
 
-// número da linha com esse id (o id é sempre a última coluna das abas de pessoas), ou 0
-function acharLinha(nomeAba, colunas, id) {
+// número da linha com esse valor na coluna pedida (o id, se nada for dito), ou 0
+function acharLinha(nomeAba, colunas, valor, campo = "id") {
   const a = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nomeAba);
   if (!a || a.getLastRow() < 2) return 0;
-  const coluna = colunas.indexOf("id") + 1;
-  const achado = a.getRange(2, coluna, a.getLastRow() - 1, 1).createTextFinder(String(id)).matchEntireCell(true).findNext();
+  const coluna = colunas.indexOf(campo) + 1;
+  const achado = a.getRange(2, coluna, a.getLastRow() - 1, 1).createTextFinder(String(valor)).matchEntireCell(true).matchCase(false).findNext();
   return achado ? achado.getRow() : 0;
 }
 
