@@ -574,7 +574,7 @@ function linksAgenda() {
   const utc = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const iso = (d) => d.toISOString().replace(/\.\d{3}/, "");
   const query = (p) => Object.entries(p).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
-  const titulo = `Webinar: ${w.titulo}`;
+  const titulo = w.tituloAgenda;
   const detalhes = `Para entrar no webinar pelo Microsoft Teams, toque no link:\n${w.linkTeams}`;
   const evGoogle = query({
     action: "TEMPLATE", text: titulo, dates: `${utc(ini)}/${utc(fim)}`,

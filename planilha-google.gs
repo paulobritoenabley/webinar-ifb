@@ -5,7 +5,7 @@
  * Publicar: Implantar > Nova implantação > App da Web, executar como "Eu", acesso "Qualquer pessoa".
  * O endereço que terminar em /exec vai no planilha.js da página.
  * Antes da primeira publicação com convite: escolha "prepararAgenda" ao lado de Depuração, clique em Executar
- * e autorize o acesso à agenda. Isso cria a agenda "Webinar IFB × Enabley", de onde saem os convites.
+ * e autorize o acesso à agenda. Os convites saem da agenda principal da conta dona da planilha.
  * Em Serviços (+ no editor), adicione "Google Calendar API": é ele que tira o Google Meet do convite.
  *
  * Recebe da página:
@@ -29,12 +29,11 @@ const APPS = ["", "apple", "google", "outlook", "outro"];
 // o convite usa só estes dados fixos (nada vem da página), para ninguém mandar outro texto em nome da Enabley.
 // Mudou o link ou o horário? Troque aqui e no evento.js da página.
 const EVENTO = {
-  titulo: "Webinar: Como aumentar a eficiência do seu onboarding e o seu ROI",
+  titulo: "Webinar: Treinamento Escala 6x1 e ROI",
   inicio: "2026-11-27T10:00:00-03:00",
   duracaoMin: 60,
   linkTeams: "https://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq",
 };
-const NOME_AGENDA = "Webinar IFB × Enabley";
 
 function doPost(e) {
   let d;
@@ -83,7 +82,8 @@ function doPost(e) {
   return responder({ ok: true });
 }
 
-// um evento por pessoa, na agenda própria do webinar: cada um recebe o seu convite e ninguém vê os outros inscritos.
+// um evento por pessoa, na agenda principal da conta (numa agenda à parte o e-mail sairia "em nome de"
+// um código enorme): cada um recebe o seu convite e ninguém vê os outros inscritos.
 // A conta põe Google Meet sozinha em todo evento novo; por isso o evento nasce sem convidado, o Meet sai,
 // e só então a pessoa entra e recebe o convite, apenas com o link do Teams.
 // Usa o serviço avançado "Google Calendar API" (Serviços > + no editor).
@@ -91,7 +91,7 @@ function mandarConvite(email) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
   const inicio = new Date(EVENTO.inicio);
   const fim = new Date(inicio.getTime() + EVENTO.duracaoMin * 60000);
-  const agenda = agendaDoWebinar();
+  const agenda = CalendarApp.getDefaultCalendar();
   const evento = agenda.createEvent(EVENTO.titulo, inicio, fim, {
     description: `Para entrar no webinar pelo Microsoft Teams, clique no link:\n${EVENTO.linkTeams}`,
     location: EVENTO.linkTeams,
@@ -104,19 +104,9 @@ function mandarConvite(email) {
   );
 }
 
-function agendaDoWebinar() {
-  const props = PropertiesService.getScriptProperties();
-  const id = props.getProperty("AGENDA_ID");
-  const existente = id && CalendarApp.getCalendarById(id);
-  if (existente) return existente;
-  const nova = CalendarApp.createCalendar(NOME_AGENDA, { timeZone: "America/Sao_Paulo" });
-  props.setProperty("AGENDA_ID", nova.getId());
-  return nova;
-}
-
-// rodar uma vez pelo editor: pede a autorização da agenda e cria a agenda do webinar
+// rodar uma vez pelo editor: pede a autorização da agenda
 function prepararAgenda() {
-  console.log("Agenda pronta:", agendaDoWebinar().getName());
+  console.log("Agenda pronta:", CalendarApp.getDefaultCalendar().getName());
 }
 
 // abrir o endereço no navegador só confirma que está no ar

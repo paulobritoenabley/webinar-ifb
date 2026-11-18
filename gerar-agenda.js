@@ -36,7 +36,7 @@ const linhas = [
   `DTSTAMP:${utc(new Date())}`,
   `DTSTART:${utc(ini)}`,
   `DTEND:${utc(fim)}`,
-  `SUMMARY:${esc(`Webinar: ${EVENTO.titulo}`)}`,
+  `SUMMARY:${esc(EVENTO.tituloAgenda)}`,
   `LOCATION:${esc(`Microsoft Teams: ${link}`)}`,
   `URL:${link}`,
   `DESCRIPTION:${esc(`Para entrar no webinar pelo Microsoft Teams, toque no link:\n${link}`)}`,

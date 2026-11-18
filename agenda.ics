@@ -5,10 +5,10 @@ CALSCALE:GREGORIAN
 METHOD:PUBLISH
 BEGIN:VEVENT
 UID:webinar-20261127T130000Z@enabley.io
-DTSTAMP:20261118T122041Z
+DTSTAMP:20261118T135230Z
 DTSTART:20261127T130000Z
 DTEND:20261127T140000Z
-SUMMARY:Webinar: Como aumentar a eficiência do seu onboarding e o seu ROI
+SUMMARY:Webinar: Treinamento Escala 6x1 e ROI
 LOCATION:Microsoft Teams: https://teams.microsoft.com/meet/3432261999992135
  ?p=HTwgj74uhz8xvmEBtq
 URL:https://teams.microsoft.com/meet/3432261999992135?p=HTwgj74uhz8xvmEBtq

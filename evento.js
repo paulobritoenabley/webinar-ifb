@@ -3,6 +3,8 @@
  */
 const EVENTO = {
   titulo: "Como aumentar a eficiência do seu onboarding e o seu ROI",
+  // nome do evento na agenda da pessoa (botão "Adicionar à agenda", agenda.ics e o convite da planilha)
+  tituloAgenda: "Webinar: Treinamento Escala 6x1 e ROI",
   dataTexto: "Sexta, 27/11 · 10h (Brasília)",
   inicio: "2026-11-27T10:00:00-03:00",
   duracaoMin: 60,

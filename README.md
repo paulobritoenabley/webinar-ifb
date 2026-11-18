@@ -24,8 +24,8 @@ chegou na aba "Não concluíram" (uma linha por pessoa, atualizada a cada etapa)
 resposta já digitada e válida, mas sem tocar em Continuar, essa resposta também vai. Quando a mesma pessoa
 conclui, a linha dela sai dessa aba. A tela de boas-vindas avisa que as respostas ficam salvas a cada etapa.
 
-**Convite automático.** A cada inscrição concluída, a planilha cria um evento na agenda "Webinar IFB × Enabley"
-(da conta Google dona da planilha) e convida o e-mail da pessoa: chega um convite de agenda com Sim/Não e só o
+**Convite automático.** A cada inscrição concluída, a planilha cria um evento na agenda principal da conta Google
+dona da planilha (Contato Enabley) e convida o e-mail da pessoa: chega um convite de agenda com Sim/Não e só o
 link do Teams. Um evento por pessoa, ninguém vê os outros inscritos, e o mesmo e-mail não recebe dois convites.
 Título, horário e link do convite ficam fixos no `planilha-google.gs` (bloco `EVENTO`), não vêm da página.
 
@@ -96,7 +96,8 @@ Com o endereço preenchido, o modo de teste some sozinho.
 
 ## Dados do webinar (`evento.js`)
 
-Título, data do texto, início, duração (está 60 min) e `linkTeams`, o link de entrada do webinar no Teams.
+Título (o do cartão da página), `tituloAgenda` (o nome do evento na agenda), data do texto, início,
+duração (está 60 min) e `linkTeams`, o link de entrada do webinar no Teams.
 **Mudou algo aqui? Rode `node gerar-agenda.js`** para refazer o `agenda.ics` com os dados novos, e troque
 também o bloco `EVENTO` do `planilha-google.gs` (é ele que vai no convite por e-mail). Convites já enviados
 não mudam sozinhos.
