@@ -6,6 +6,7 @@
  * O endereço que terminar em /exec vai no planilha.js da página.
  * Antes da primeira publicação com convite: escolha "prepararAgenda" ao lado de Depuração, clique em Executar
  * e autorize o acesso à agenda. Isso cria a agenda "Webinar IFB × Enabley", de onde saem os convites.
+ * Em Serviços (+ no editor), adicione "Google Calendar API": é ele que tira o Google Meet do convite.
  *
  * Recebe da página:
  *   inscricao  → uma linha na aba "Inscrições" e um convite de agenda para o e-mail, com o link do Teams
@@ -82,17 +83,25 @@ function doPost(e) {
   return responder({ ok: true });
 }
 
-// um evento por pessoa, na agenda própria do webinar: cada um recebe o seu convite e ninguém vê os outros inscritos
+// um evento por pessoa, na agenda própria do webinar: cada um recebe o seu convite e ninguém vê os outros inscritos.
+// A conta põe Google Meet sozinha em todo evento novo; por isso o evento nasce sem convidado, o Meet sai,
+// e só então a pessoa entra e recebe o convite, apenas com o link do Teams.
+// Usa o serviço avançado "Google Calendar API" (Serviços > + no editor).
 function mandarConvite(email) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
   const inicio = new Date(EVENTO.inicio);
   const fim = new Date(inicio.getTime() + EVENTO.duracaoMin * 60000);
-  agendaDoWebinar().createEvent(EVENTO.titulo, inicio, fim, {
+  const agenda = agendaDoWebinar();
+  const evento = agenda.createEvent(EVENTO.titulo, inicio, fim, {
     description: `Para entrar no webinar pelo Microsoft Teams, clique no link:\n${EVENTO.linkTeams}`,
     location: EVENTO.linkTeams,
-    guests: email,
-    sendInvites: true,
   });
+  const id = evento.getId().replace(/@google\.com$/, "");
+  Calendar.Events.patch({ conferenceData: null }, agenda.getId(), id, { conferenceDataVersion: 1, sendUpdates: "none" });
+  Calendar.Events.patch(
+    { attendees: [{ email }], guestsCanSeeOtherGuests: false, guestsCanInviteOthers: false },
+    agenda.getId(), id, { sendUpdates: "all" },
+  );
 }
 
 function agendaDoWebinar() {
