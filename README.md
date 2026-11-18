@@ -7,8 +7,9 @@ A pessoa se inscreve no webinar de **sexta, 27/11, às 10h**: "Como aumentar a e
 
 1. Boas-vindas rápidas com o cartão do webinar e o botão "Começar inscrição".
 2. Cinco perguntas, uma por tela: nome e sobrenome, cargo, empresa, e-mail corporativo e WhatsApp.
-3. "Confirmando sua inscrição…"
-4. Agradecimento com o cartão do webinar e o botão "Adicionar à agenda". Ele abre uma folha com os apps,
+3. "Confirmando sua inscrição…" (alguns segundos: é quando a planilha manda o convite).
+4. Agradecimento com confetes, o aviso de que o convite foi para o e-mail, o cartão do webinar e o botão
+   "Adicionar à agenda" (de reserva, para quem não achar o convite). Ele abre uma folha com os apps,
    cada um com o seu logo e nenhum em destaque, na ordem mais provável do aparelho
    (iPhone: Agenda do iPhone, Google, Outlook · Android: Google, Outlook, outro app · computador: Outlook,
    Google, outro app). Todos levam o link do webinar no Teams e um lembrete 15 min antes.
@@ -22,6 +23,11 @@ ou outro app, copiou o link) vão para uma planilha do Google. O **painel** (`/p
 chegou na aba "Não concluíram" (uma linha por pessoa, atualizada a cada etapa). Se ela fechar a aba com a
 resposta já digitada e válida, mas sem tocar em Continuar, essa resposta também vai. Quando a mesma pessoa
 conclui, a linha dela sai dessa aba. A tela de boas-vindas avisa que as respostas ficam salvas a cada etapa.
+
+**Convite automático.** A cada inscrição concluída, a planilha cria um evento na agenda "Webinar IFB × Enabley"
+(da conta Google dona da planilha) e convida o e-mail da pessoa: chega um convite de agenda com Sim/Não e só o
+link do Teams. Um evento por pessoa, ninguém vê os outros inscritos, e o mesmo e-mail não recebe dois convites.
+Título, horário e link do convite ficam fixos no `planilha-google.gs` (bloco `EVENTO`), não vêm da página.
 
 ## Painel de controle (`painel/`)
 
@@ -49,6 +55,8 @@ não mostra nada. Ele não aparece no Google (noindex).
    **Qualquer pessoa**. Autorize com a sua conta Google (vai aparecer um aviso de "app não verificado":
    Avançado > Acessar). Copie o endereço que termina em `/exec`.
 5. Cole esse endereço no `planilha.js`, em `url: "..."`.
+6. Para o convite automático: em **Serviços (+)** adicione **Google Calendar API**; depois escolha a função
+   `prepararAgenda` ao lado de Depuração, clique em **Executar** e autorize o acesso à agenda.
 
 As abas "Inscrições", "Não concluíram" e "Cliques" aparecem sozinhas no primeiro uso.
 
@@ -89,7 +97,9 @@ Com o endereço preenchido, o modo de teste some sozinho.
 ## Dados do webinar (`evento.js`)
 
 Título, data do texto, início, duração (está 60 min) e `linkTeams`, o link de entrada do webinar no Teams.
-**Mudou algo aqui? Rode `node gerar-agenda.js`** para refazer o `agenda.ics` com os dados novos.
+**Mudou algo aqui? Rode `node gerar-agenda.js`** para refazer o `agenda.ics` com os dados novos, e troque
+também o bloco `EVENTO` do `planilha-google.gs` (é ele que vai no convite por e-mail). Convites já enviados
+não mudam sozinhos.
 
 ## Ajustes rápidos (no começo do `app.js`, bloco `CONFIG`)
 

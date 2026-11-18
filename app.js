@@ -489,6 +489,10 @@ function prepararFim() {
   nome.textContent = primeiroNome(registro.nome);
   titulo.append(nome, "!");
 
+  const email = document.createElement("strong");
+  email.textContent = registro.email;
+  $("#fim-convite").replaceChildren("O convite com o link do Teams vai chegar em ", email, ". Se não aparecer, confira o spam.");
+
   if (CONFIG.modoTeste) {
     $("#painel-teste").hidden = false;
     $("#dados-teste").textContent = JSON.stringify(registro, null, 2);
