@@ -12,7 +12,6 @@ const CONFIG = {
   webinar: EVENTO,
   endpoint: PLANILHA.url,
   modoTeste: !PLANILHA.url,         // mostra no fim os dados que seriam enviados
-  bloquearEmailPessoal: true,       // recusa Gmail, Hotmail e parecidos
   origemPadrao: "qr-deck-ifb",
 };
 
@@ -31,17 +30,6 @@ const DDDS = new Set([
   41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 53, 54, 55, 61, 62, 63, 64, 65, 66, 67, 68, 69,
   71, 73, 74, 75, 77, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99,
 ]);
-
-const EMAIL_PESSOAL = new Set([
-  "gmail.com", "googlemail.com", "hotmail.com", "hotmail.com.br", "outlook.com", "outlook.com.br",
-  "live.com", "live.com.br", "msn.com", "yahoo.com", "yahoo.com.br", "ymail.com", "rocketmail.com",
-  "icloud.com", "me.com", "mac.com", "bol.com.br", "uol.com.br", "terra.com.br", "ig.com.br",
-  "globomail.com", "zipmail.com.br", "aol.com", "protonmail.com", "proton.me", "gmx.com", "gmx.net",
-  "mail.com", "yandex.com", "zoho.com", "tutanota.com",
-]);
-
-// finais que quase sempre são erro de digitação
-const FINAL_ERRADO = /\.(con|cmo|comm|coom|vom|xom|cpm|om|con\.br|com\.bt|com\.rb|combr)$/;
 
 const limpar = (v) => v.trim().replace(/\s+/g, " ");
 const contar = (v, re) => (v.match(re) || []).length;
@@ -80,21 +68,14 @@ function validarEmpresa(v) {
   return "";
 }
 
+// qualquer e-mail vale (empresa, Gmail, Hotmail…): só precisa do @ com algo antes e depois
 function validarEmail(v) {
-  const t = v.trim().toLowerCase();
+  const t = v.trim();
   if (!t) return "Escreva seu e-mail.";
-  const arrobas = contar(t, /@/g);
-  if (arrobas === 0) return "Falta o @ no e-mail.";
-  if (arrobas > 1) return "O e-mail tem mais de um @.";
-  const [local, dominio] = t.split("@");
+  if (!t.includes("@")) return "Falta o @ no e-mail.";
+  const [local, ...resto] = t.split("@");
   if (!local) return "Falta a parte antes do @.";
-  if (!/^[a-z0-9._%+-]{1,64}$/.test(local) || /^\.|\.$|\.\./.test(local)) return "Confira a parte antes do @.";
-  if (!dominio) return "Falta o endereço depois do @.";
-  if (!/^(?=.{4,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/.test(dominio)) {
-    return dominio.includes(".") ? "Confira o endereço depois do @." : "Falta o final do e-mail, como .com.br.";
-  }
-  if (FINAL_ERRADO.test(dominio)) return "O final do e-mail parece ter um erro de digitação.";
-  if (CONFIG.bloquearEmailPessoal && EMAIL_PESSOAL.has(dominio)) return "Use o e-mail da empresa. Gmail, Hotmail e parecidos não valem aqui.";
+  if (!resto.join("@")) return "Falta o endereço depois do @.";
   return "";
 }
 
@@ -153,9 +134,9 @@ const PERGUNTAS = [
   },
   {
     id: "email",
-    titulo: () => "Qual é o seu e-mail corporativo?",
+    titulo: () => "Qual é o seu e-mail?",
     ajuda: "É para ele que vamos mandar o convite.",
-    placeholder: "voce@suaempresa.com.br",
+    placeholder: "voce@email.com.br",
     atributos: { type: "text", inputmode: "email", autocomplete: "email", autocapitalize: "none", autocorrect: "off", spellcheck: "false", maxlength: "120" },
     minusculas: true,
     filtro: /[^a-z0-9@._%+-]/g,

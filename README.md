@@ -6,7 +6,7 @@ A pessoa se inscreve no webinar de **sexta, 27/11, às 10h**: "Como aumentar a e
 ## Como funciona
 
 1. Boas-vindas rápidas com o cartão do webinar e o botão "Começar inscrição".
-2. Cinco perguntas, uma por tela: nome e sobrenome, cargo, empresa, e-mail corporativo e WhatsApp.
+2. Cinco perguntas, uma por tela: nome e sobrenome, cargo, empresa, e-mail (qualquer um) e WhatsApp.
 3. "Confirmando sua inscrição…" (alguns segundos: é quando a planilha manda o convite).
 4. Agradecimento com confetes, o aviso de que o convite foi para o e-mail, o cartão do webinar e o botão
    "Adicionar à agenda" (de reserva, para quem não achar o convite). Ele abre uma folha com os apps,
@@ -82,7 +82,7 @@ O GitHub Pages já entrega o `agenda.ics` do jeito que o iPhone precisa.
 | Nome | números e símbolos (nem entram); sem sobrenome; só a inicial; letras repetidas tipo "aaa". Arruma maiúsculas: "JOÃO DA silva" vira "João da Silva" |
 | Cargo | símbolos estranhos; só números |
 | Empresa | símbolos estranhos; menos de 2 letras ou números |
-| E-mail | espaço e acento (nem entram); sem @ ou com dois; sem final (.com.br); finais com erro (.con, .cmo…); Gmail, Hotmail, Outlook, Yahoo, iCloud, UOL, BOL e parecidos |
+| E-mail | espaço e acento (nem entram); sem @, ou sem nada antes ou depois do @. Qualquer e-mail vale, inclusive Gmail e Hotmail |
 | WhatsApp | só números; monta sozinho no formato DD-NNNNN-NNNN; DDD que não existe; celular que não começa com 9; números repetidos. Aceita colar "+55 (11) 98765-4321" |
 
 Também tem um campo-isca escondido contra robôs.
@@ -104,7 +104,6 @@ não mudam sozinhos.
 
 ## Ajustes rápidos (no começo do `app.js`, bloco `CONFIG`)
 
-- `bloquearEmailPessoal`: `false` para aceitar Gmail e parecidos.
 - A origem vai junto em cada inscrição: `?origem=` na URL (padrão `qr-deck-ifb`) e os `utm_*`.
 
 ## Arquivos
